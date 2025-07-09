@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+    #dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      max-width: 1000px;
+    }
+    .tile {
+      border-radius: 16px;
+      padding: 1rem;
+      margin: 1rem;
+      width: 160px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background-color: #333;
+      transition: background-color 0.3s;
+    }
+    .status-ok { background-color: #1e3a1e; }
+    .status-warn { background-color: #5a4500; }
+    .status-critical { background-color: #5a1e1e; }
+    .status-none { background-color: #444; }
+    .value {
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+    .unit {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="dashboard"></div>
+
+  <script>
+    const sources = [
+      `http://${location.hostname}:8091/`,
+      `http://${location.hostname}:8092/`,
+      `http://${location.hostname}:8093/`,
+    ];
+
+    async function loadAndRender() {
+      const container = document.getElementById('dashboard');
+      container.innerHTML = '';
+
+      for (const url of sources) {
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+
+          if (Array.isArray(data)) {
+            data.forEach(drawTile);
+          } else {
+            Object.values(data).forEach(drawTile);
+          }
+        } catch (e) {
+          console.error(`Error loading ${url}`, e);
+        }
+      }
+    }
+
+    function drawTile(metric) {
+      const div = document.createElement('div');
+      div.className = `tile status-${metric.status}`;
+      div.innerHTML = `
+        <div>${metric.name}</div>
+        <div class="value">${metric.value}</div>
+        <div class="unit">${metric.unit}</div>
+      `;
+      document.getElementById('dashboard').appendChild(div);
+    }
+
+    loadAndRender();
+    setInterval(loadAndRender, 5000);
+  </script>
+
+</body>
+</html>

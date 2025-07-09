@@ -31,8 +31,23 @@ var (
 func main() {
 	go monitorTemperature()
 	go monitorSystemUptime()
+	go httpServeStatus()
+	go httpServeDashboard()
+	select {}
+}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func httpServeStatus() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		mu.RLock()
 		defer mu.RUnlock()
 
@@ -59,12 +74,19 @@ func main() {
 			},
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(response)
 	})
-
 	log.Println("HTTP server started on http://localhost:8093")
-	log.Fatal(http.ListenAndServe(":8093", nil))
+	log.Fatal(http.ListenAndServe(":8093", mux))
+}
+
+func httpServeDashboard() {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "dashboard.html")
+	}))
+	log.Println("🌐 Serving dashboard at http://localhost:8090")
+	log.Fatal(http.ListenAndServe(":8090", mux))
 }
 
 // monitorTemperature periodically updates the MaxTemp value
