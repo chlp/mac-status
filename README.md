@@ -4,14 +4,9 @@ A lightweight Go application that runs an HTTP server and serves basic macOS sys
 ## Features
 
 - Reports:
-  - **Maximum CPU temperature** (since app start)
-  - **System uptime** (in seconds)
-  - **App uptime** (in seconds)
-- Metrics include:
-  - `name`
-  - `value`
-  - `unit`
-  - `status` (`none`, `ok`, `warn`, `critical`)
+  - **Maximum CPU temperature**
+  - **System uptime**
+  - **App uptime**
 
 ## Example output
 
